@@ -33,6 +33,22 @@ class MonteCarloResponse(BaseModel):
     samples_used: int
 
 
+class ConvergenceRequest(BaseModel):
+    max_samples: int = Field(default=1000, ge=1, le=1_000_000)
+    step: int = Field(default=100, ge=1, le=100_000)
+    dimensions: int = Field(default=2, ge=1, le=20)
+    seed: int | None = None
+
+
+class ConvergencePoint(BaseModel):
+    samples_used: int
+    estimate: float
+
+
+class ConvergenceResponse(BaseModel):
+    points: list[ConvergencePoint]
+
+
 @app.post("/simulate/monte-carlo", response_model=MonteCarloResponse)
 def simulate_monte_carlo(payload: MonteCarloRequest) -> MonteCarloResponse:
     rng = random.Random(payload.seed)
@@ -62,3 +78,39 @@ def simulate_monte_carlo(payload: MonteCarloRequest) -> MonteCarloResponse:
         std_error=std_error,
         samples_used=n,
     )
+
+
+@app.post("/simulate/monte-carlo/convergence", response_model=ConvergenceResponse)
+def simulate_monte_carlo_convergence(
+    payload: ConvergenceRequest,
+) -> ConvergenceResponse:
+    rng = random.Random(payload.seed)
+    total = 0.0
+    count = 0
+    points: list[ConvergencePoint] = []
+
+    max_samples = payload.max_samples
+    step = min(payload.step, max_samples)
+    d = payload.dimensions
+
+    for target in range(step, max_samples + 1, step):
+        while count < target:
+            value = 0.0
+            for _ in range(d):
+                x = rng.random()
+                value += x * x
+            total += value
+            count += 1
+        points.append(ConvergencePoint(samples_used=count, estimate=total / count))
+
+    if points and points[-1].samples_used != max_samples:
+        while count < max_samples:
+            value = 0.0
+            for _ in range(d):
+                x = rng.random()
+                value += x * x
+            total += value
+            count += 1
+        points.append(ConvergencePoint(samples_used=count, estimate=total / count))
+
+    return ConvergenceResponse(points=points)
