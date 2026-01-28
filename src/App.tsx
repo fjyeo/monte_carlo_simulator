@@ -12,6 +12,7 @@ function App() {
   const [dimensions, setDimensions] = useState(2)
   const [seed, setSeed] = useState<number | ''>('')
   const [result, setResult] = useState<MonteCarloResponse | null>(null)
+  const [history, setHistory] = useState<number[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -37,6 +38,7 @@ function App() {
 
       const data = (await response.json()) as MonteCarloResponse
       setResult(data)
+      setHistory((prev) => [...prev, data.estimate])
     } catch (caught) {
       const message =
         caught instanceof Error ? caught.message : 'Unexpected error'
@@ -112,6 +114,65 @@ function App() {
           <p className="muted">Run the simulation to see results.</p>
         )}
       </section>
+
+      <section className="panel">
+        <div className="panel-header">
+          <h2>Estimate history</h2>
+          <button
+            type="button"
+            onClick={() => setHistory([])}
+            disabled={history.length === 0}
+          >
+            Clear
+          </button>
+        </div>
+        {history.length < 2 ? (
+          <p className="muted">Run the simulation at least twice to plot.</p>
+        ) : (
+          <EstimatePlot values={history} />
+        )}
+      </section>
+    </div>
+  )
+}
+
+type EstimatePlotProps = {
+  values: number[]
+}
+
+function EstimatePlot({ values }: EstimatePlotProps) {
+  const width = 420
+  const height = 160
+  const padding = 16
+  const minValue = Math.min(...values)
+  const maxValue = Math.max(...values)
+  const range = maxValue - minValue || 1
+
+  const points = values
+    .map((value, index) => {
+      const x =
+        padding + (index / (values.length - 1)) * (width - padding * 2)
+      const y =
+        padding + ((maxValue - value) / range) * (height - padding * 2)
+      return `${x},${y}`
+    })
+    .join(' ')
+
+  return (
+    <div className="plot">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label="Estimate history plot"
+      >
+        <rect x="0" y="0" width={width} height={height} rx="12" />
+        <polyline points={points} />
+      </svg>
+      <div className="plot-meta">
+        <span>Min: {minValue.toFixed(4)}</span>
+        <span>Max: {maxValue.toFixed(4)}</span>
+        <span>Runs: {values.length}</span>
+      </div>
     </div>
   )
 }
