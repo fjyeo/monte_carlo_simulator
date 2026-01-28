@@ -1,73 +1,61 @@
-# React + TypeScript + Vite
+# Monte Carlo Visualization
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interactive web app for exploring Monte Carlo simulation methods with a React
+frontend and a FastAPI backend.
 
-Currently, two official plugins are available:
+## Project goals
+- Show how Monte Carlo estimates converge as sample size increases.
+- Compare standard Monte Carlo, importance sampling, and MCMC (later phases).
+- Visualize diagnostics: convergence, variance, trace plots, autocorrelation.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Tech stack
+- Frontend: React + TypeScript (Vite)
+- Backend: FastAPI (Python)
 
-## React Compiler
+## Quick start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Backend
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Frontend
+```powershell
+npm install
+npm run dev
 ```
+
+Open `http://localhost:5173`.
+
+## API
+
+### POST /simulate/monte-carlo
+Estimate the expected value of the sum of squares for a uniform random vector
+in `d` dimensions.
+
+Request body:
+```json
+{
+  "samples": 1000,
+  "dimensions": 2,
+  "seed": 123
+}
+```
+
+Response:
+```json
+{
+  "estimate": 0.666666,
+  "std_error": 0.012345,
+  "samples_used": 1000
+}
+```
+
+## Current status
+- Backend scaffold is in place.
+- Basic Monte Carlo endpoint implemented.
+- Minimal frontend call available (see the UI for inputs/results).
