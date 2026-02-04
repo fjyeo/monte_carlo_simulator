@@ -7,6 +7,15 @@ type MonteCarloResponse = {
   samples_used: number
 }
 
+type ConvergencePoint = {
+  samples_used: number
+  estimate: number
+}
+
+type ConvergenceResponse = {
+  points: ConvergencePoint[]
+}
+
 function App() {
   const [samples, setSamples] = useState(1000)
   const [dimensions, setDimensions] = useState(2)
@@ -15,6 +24,11 @@ function App() {
   const [history, setHistory] = useState<number[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [convergenceMax, setConvergenceMax] = useState(1000)
+  const [convergenceStep, setConvergenceStep] = useState(100)
+  const [convergence, setConvergence] = useState<ConvergencePoint[]>([])
+  const [convergenceError, setConvergenceError] = useState<string | null>(null)
+  const [convergenceLoading, setConvergenceLoading] = useState(false)
 
   const runSimulation = async () => {
     setIsLoading(true)
@@ -48,11 +62,46 @@ function App() {
     }
   }
 
+  const runConvergence = async () => {
+    setConvergenceLoading(true)
+    setConvergenceError(null)
+    setConvergence([])
+
+    try {
+      const response = await fetch(
+        'http://localhost:8000/simulate/monte-carlo/convergence',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            max_samples: convergenceMax,
+            step: convergenceStep,
+            dimensions,
+            seed: seed === '' ? null : seed,
+          }),
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error('Convergence run failed')
+      }
+
+      const data = (await response.json()) as ConvergenceResponse
+      setConvergence(data.points)
+    } catch (caught) {
+      const message =
+        caught instanceof Error ? caught.message : 'Unexpected error'
+      setConvergenceError(message)
+    } finally {
+      setConvergenceLoading(false)
+    }
+  }
+
   return (
     <div className="app">
       <header>
         <h1>Monte Carlo Playground</h1>
-        <p>Estimate E[sum(x²)] for x ~ Uniform([0,1]^d)</p>
+        <p>Estimate E[sum(x^2)] for x ~ Uniform([0,1]^d)</p>
       </header>
 
       <section className="panel">
@@ -132,6 +181,52 @@ function App() {
           <EstimatePlot values={history} />
         )}
       </section>
+
+      <section className="panel">
+        <div className="panel-header">
+          <h2>Convergence</h2>
+          <button
+            type="button"
+            onClick={() => setConvergence([])}
+            disabled={convergence.length === 0}
+          >
+            Clear
+          </button>
+        </div>
+        <label>
+          Max samples
+          <input
+            type="number"
+            min={1}
+            max={1_000_000}
+            value={convergenceMax}
+            onChange={(event) => setConvergenceMax(Number(event.target.value))}
+          />
+        </label>
+        <label>
+          Step size
+          <input
+            type="number"
+            min={1}
+            max={100_000}
+            value={convergenceStep}
+            onChange={(event) => setConvergenceStep(Number(event.target.value))}
+          />
+        </label>
+        <button
+          type="button"
+          onClick={runConvergence}
+          disabled={convergenceLoading}
+        >
+          {convergenceLoading ? 'Running...' : 'Run convergence'}
+        </button>
+        {convergenceError && <p className="error">{convergenceError}</p>}
+        {convergence.length < 2 ? (
+          <p className="muted">Run convergence to see the plot.</p>
+        ) : (
+          <ConvergencePlot points={convergence} />
+        )}
+      </section>
     </div>
   )
 }
@@ -177,4 +272,45 @@ function EstimatePlot({ values }: EstimatePlotProps) {
   )
 }
 
+type ConvergencePlotProps = {
+  points: ConvergencePoint[]
+}
+
+function ConvergencePlot({ points }: ConvergencePlotProps) {
+  const width = 420
+  const height = 160
+  const padding = 16
+  const minX = Math.min(...points.map((point) => point.samples_used))
+  const maxX = Math.max(...points.map((point) => point.samples_used))
+  const minY = Math.min(...points.map((point) => point.estimate))
+  const maxY = Math.max(...points.map((point) => point.estimate))
+  const rangeX = maxX - minX || 1
+  const rangeY = maxY - minY || 1
+
+  const polyline = points
+    .map((point) => {
+      const x =
+        padding + ((point.samples_used - minX) / rangeX) * (width - padding * 2)
+      const y =
+        padding + ((maxY - point.estimate) / rangeY) * (height - padding * 2)
+      return `${x},${y}`
+    })
+    .join(' ')
+
+  return (
+    <div className="plot">
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Convergence plot">
+        <rect x="0" y="0" width={width} height={height} rx="12" />
+        <polyline points={polyline} />
+      </svg>
+      <div className="plot-meta">
+        <span>Min: {minY.toFixed(4)}</span>
+        <span>Max: {maxY.toFixed(4)}</span>
+        <span>Points: {points.length}</span>
+      </div>
+    </div>
+  )
+}
+
 export default App
+
