@@ -34,6 +34,7 @@ function App() {
   const [importanceBeta, setImportanceBeta] = useState(2)
   const [importanceResult, setImportanceResult] =
     useState<ImportanceSamplingResponse | null>(null)
+  const [importanceHistory, setImportanceHistory] = useState<number[]>([])
   const [importanceError, setImportanceError] = useState<string | null>(null)
   const [importanceLoading, setImportanceLoading] = useState(false)
   const [convergenceMax, setConvergenceMax] = useState(1000)
@@ -133,6 +134,7 @@ function App() {
 
       const data = (await response.json()) as ImportanceSamplingResponse
       setImportanceResult(data)
+      setImportanceHistory((prev) => [...prev, data.estimate])
     } catch (caught) {
       const message =
         caught instanceof Error ? caught.message : 'Unexpected error'
@@ -212,7 +214,7 @@ function App() {
       <section className="panel">
         <h2>Importance sampling</h2>
         <label>
-          Alpha (α)
+          Alpha
           <input
             type="number"
             min={0.1}
@@ -223,7 +225,7 @@ function App() {
           />
         </label>
         <label>
-          Beta (β)
+          Beta
           <input
             type="number"
             min={0.1}
@@ -258,6 +260,24 @@ function App() {
           </dl>
         ) : (
           <p className="muted">Run importance sampling to compare results.</p>
+        )}
+      </section>
+
+      <section className="panel">
+        <div className="panel-header">
+          <h2>Importance sampling history</h2>
+          <button
+            type="button"
+            onClick={() => setImportanceHistory([])}
+            disabled={importanceHistory.length === 0}
+          >
+            Clear
+          </button>
+        </div>
+        {importanceHistory.length < 2 ? (
+          <p className="muted">Run importance sampling at least twice to plot.</p>
+        ) : (
+          <EstimatePlot values={importanceHistory} />
         )}
       </section>
 
@@ -410,4 +430,5 @@ function ConvergencePlot({ points }: ConvergencePlotProps) {
 }
 
 export default App
+
 
