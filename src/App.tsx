@@ -16,6 +16,12 @@ type ConvergenceResponse = {
   points: ConvergencePoint[]
 }
 
+type ImportanceSamplingResponse = {
+  estimate: number
+  std_error: number
+  samples_used: number
+}
+
 function App() {
   const [samples, setSamples] = useState(1000)
   const [dimensions, setDimensions] = useState(2)
@@ -24,6 +30,12 @@ function App() {
   const [history, setHistory] = useState<number[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [importanceAlpha, setImportanceAlpha] = useState(2)
+  const [importanceBeta, setImportanceBeta] = useState(2)
+  const [importanceResult, setImportanceResult] =
+    useState<ImportanceSamplingResponse | null>(null)
+  const [importanceError, setImportanceError] = useState<string | null>(null)
+  const [importanceLoading, setImportanceLoading] = useState(false)
   const [convergenceMax, setConvergenceMax] = useState(1000)
   const [convergenceStep, setConvergenceStep] = useState(100)
   const [convergence, setConvergence] = useState<ConvergencePoint[]>([])
@@ -97,6 +109,39 @@ function App() {
     }
   }
 
+  const runImportanceSampling = async () => {
+    setImportanceLoading(true)
+    setImportanceError(null)
+    setImportanceResult(null)
+
+    try {
+      const response = await fetch('http://localhost:8000/simulate/importance-sampling', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          samples,
+          dimensions,
+          alpha: importanceAlpha,
+          beta: importanceBeta,
+          seed: seed === '' ? null : seed,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Importance sampling failed')
+      }
+
+      const data = (await response.json()) as ImportanceSamplingResponse
+      setImportanceResult(data)
+    } catch (caught) {
+      const message =
+        caught instanceof Error ? caught.message : 'Unexpected error'
+      setImportanceError(message)
+    } finally {
+      setImportanceLoading(false)
+    }
+  }
+
   return (
     <div className="app">
       <header>
@@ -161,6 +206,58 @@ function App() {
           </dl>
         ) : (
           <p className="muted">Run the simulation to see results.</p>
+        )}
+      </section>
+
+      <section className="panel">
+        <h2>Importance sampling</h2>
+        <label>
+          Alpha (α)
+          <input
+            type="number"
+            min={0.1}
+            max={10}
+            step={0.1}
+            value={importanceAlpha}
+            onChange={(event) => setImportanceAlpha(Number(event.target.value))}
+          />
+        </label>
+        <label>
+          Beta (β)
+          <input
+            type="number"
+            min={0.1}
+            max={10}
+            step={0.1}
+            value={importanceBeta}
+            onChange={(event) => setImportanceBeta(Number(event.target.value))}
+          />
+        </label>
+        <button
+          type="button"
+          onClick={runImportanceSampling}
+          disabled={importanceLoading}
+        >
+          {importanceLoading ? 'Running...' : 'Run importance sampling'}
+        </button>
+        {importanceError && <p className="error">{importanceError}</p>}
+        {importanceResult ? (
+          <dl>
+            <div>
+              <dt>Estimate</dt>
+              <dd>{importanceResult.estimate.toFixed(6)}</dd>
+            </div>
+            <div>
+              <dt>Std. error</dt>
+              <dd>{importanceResult.std_error.toFixed(6)}</dd>
+            </div>
+            <div>
+              <dt>Samples used</dt>
+              <dd>{importanceResult.samples_used}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="muted">Run importance sampling to compare results.</p>
         )}
       </section>
 
