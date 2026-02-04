@@ -264,6 +264,32 @@ function App() {
       </section>
 
       <section className="panel">
+        <h2>Comparison</h2>
+        {result || importanceResult ? (
+          <dl>
+            <div>
+              <dt>Standard MC estimate</dt>
+              <dd>{result ? result.estimate.toFixed(6) : '—'}</dd>
+            </div>
+            <div>
+              <dt>Standard MC std. error</dt>
+              <dd>{result ? result.std_error.toFixed(6) : '—'}</dd>
+            </div>
+            <div>
+              <dt>Importance sampling estimate</dt>
+              <dd>{importanceResult ? importanceResult.estimate.toFixed(6) : '—'}</dd>
+            </div>
+            <div>
+              <dt>Importance sampling std. error</dt>
+              <dd>{importanceResult ? importanceResult.std_error.toFixed(6) : '—'}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="muted">Run both methods to compare results.</p>
+        )}
+      </section>
+
+      <section className="panel">
         <div className="panel-header">
           <h2>Importance sampling history</h2>
           <button
