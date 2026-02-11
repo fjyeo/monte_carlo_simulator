@@ -147,229 +147,236 @@ function App() {
   return (
     <div className="app">
       <header>
-        <h1>Monte Carlo Playground</h1>
+        <h1>Interactive Monte Carlo Simulation</h1>
         <p>Estimate E[sum(x^2)] for x ~ Uniform([0,1]^d)</p>
       </header>
 
-      <section className="panel">
-        <label>
-          Samples
-          <input
-            type="number"
-            min={1}
-            max={1_000_000}
-            value={samples}
-            onChange={(event) => setSamples(Number(event.target.value))}
-          />
-        </label>
-        <label>
-          Dimensions
-          <input
-            type="number"
-            min={1}
-            max={20}
-            value={dimensions}
-            onChange={(event) => setDimensions(Number(event.target.value))}
-          />
-        </label>
-        <label>
-          Seed (optional)
-          <input
-            type="number"
-            value={seed}
-            onChange={(event) =>
-              setSeed(event.target.value === '' ? '' : Number(event.target.value))
-            }
-          />
-        </label>
+      <div className="layout">
+        <div className="column">
+          <section className="panel">
+            <h2>Inputs</h2>
+            <label>
+              Samples
+              <input
+                type="number"
+                min={1}
+                max={1_000_000}
+                value={samples}
+                onChange={(event) => setSamples(Number(event.target.value))}
+              />
+            </label>
+            <label>
+              Dimensions
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={dimensions}
+                onChange={(event) => setDimensions(Number(event.target.value))}
+              />
+            </label>
+            <label>
+              Seed (optional)
+              <input
+                type="number"
+                value={seed}
+                onChange={(event) =>
+                  setSeed(event.target.value === '' ? '' : Number(event.target.value))
+                }
+              />
+            </label>
 
-        <button type="button" onClick={runSimulation} disabled={isLoading}>
-          {isLoading ? 'Running...' : 'Run simulation'}
-        </button>
-      </section>
+            <button type="button" onClick={runSimulation} disabled={isLoading}>
+              {isLoading ? 'Running...' : 'Run simulation'}
+            </button>
+          </section>
 
-      <section className="panel">
-        <h2>Result</h2>
-        {error && <p className="error">{error}</p>}
-        {result ? (
-          <dl>
-            <div>
-              <dt>Estimate</dt>
-              <dd>{result.estimate.toFixed(6)}</dd>
-            </div>
-            <div>
-              <dt>Std. error</dt>
-              <dd>{result.std_error.toFixed(6)}</dd>
-            </div>
-            <div>
-              <dt>Samples used</dt>
-              <dd>{result.samples_used}</dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="muted">Run the simulation to see results.</p>
-        )}
-      </section>
+          <section className="panel">
+            <h2>Result</h2>
+            {error && <p className="error">{error}</p>}
+            {result ? (
+              <dl>
+                <div>
+                  <dt>Estimate</dt>
+                  <dd>{result.estimate.toFixed(6)}</dd>
+                </div>
+                <div>
+                  <dt>Std. error</dt>
+                  <dd>{result.std_error.toFixed(6)}</dd>
+                </div>
+                <div>
+                  <dt>Samples used</dt>
+                  <dd>{result.samples_used}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="muted">Run the simulation to see results.</p>
+            )}
+          </section>
 
-      <section className="panel">
-        <h2>Importance sampling</h2>
-        <label>
-          Alpha
-          <input
-            type="number"
-            min={0.1}
-            max={10}
-            step={0.1}
-            value={importanceAlpha}
-            onChange={(event) => setImportanceAlpha(Number(event.target.value))}
-          />
-        </label>
-        <label>
-          Beta
-          <input
-            type="number"
-            min={0.1}
-            max={10}
-            step={0.1}
-            value={importanceBeta}
-            onChange={(event) => setImportanceBeta(Number(event.target.value))}
-          />
-        </label>
-        <button
-          type="button"
-          onClick={runImportanceSampling}
-          disabled={importanceLoading}
-        >
-          {importanceLoading ? 'Running...' : 'Run importance sampling'}
-        </button>
-        {importanceError && <p className="error">{importanceError}</p>}
-        {importanceResult ? (
-          <dl>
-            <div>
-              <dt>Estimate</dt>
-              <dd>{importanceResult.estimate.toFixed(6)}</dd>
-            </div>
-            <div>
-              <dt>Std. error</dt>
-              <dd>{importanceResult.std_error.toFixed(6)}</dd>
-            </div>
-            <div>
-              <dt>Samples used</dt>
-              <dd>{importanceResult.samples_used}</dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="muted">Run importance sampling to compare results.</p>
-        )}
-      </section>
+          <section className="panel">
+            <h2>Importance sampling</h2>
+            <label>
+              Alpha
+              <input
+                type="number"
+                min={0.1}
+                max={10}
+                step={0.1}
+                value={importanceAlpha}
+                onChange={(event) => setImportanceAlpha(Number(event.target.value))}
+              />
+            </label>
+            <label>
+              Beta
+              <input
+                type="number"
+                min={0.1}
+                max={10}
+                step={0.1}
+                value={importanceBeta}
+                onChange={(event) => setImportanceBeta(Number(event.target.value))}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={runImportanceSampling}
+              disabled={importanceLoading}
+            >
+              {importanceLoading ? 'Running...' : 'Run importance sampling'}
+            </button>
+            {importanceError && <p className="error">{importanceError}</p>}
+            {importanceResult ? (
+              <dl>
+                <div>
+                  <dt>Estimate</dt>
+                  <dd>{importanceResult.estimate.toFixed(6)}</dd>
+                </div>
+                <div>
+                  <dt>Std. error</dt>
+                  <dd>{importanceResult.std_error.toFixed(6)}</dd>
+                </div>
+                <div>
+                  <dt>Samples used</dt>
+                  <dd>{importanceResult.samples_used}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="muted">Run importance sampling to compare results.</p>
+            )}
+          </section>
 
-      <section className="panel">
-        <h2>Comparison</h2>
-        {result || importanceResult ? (
-          <dl>
-            <div>
-              <dt>Standard MC estimate</dt>
-              <dd>{result ? result.estimate.toFixed(6) : '—'}</dd>
-            </div>
-            <div>
-              <dt>Standard MC std. error</dt>
-              <dd>{result ? result.std_error.toFixed(6) : '—'}</dd>
-            </div>
-            <div>
-              <dt>Importance sampling estimate</dt>
-              <dd>{importanceResult ? importanceResult.estimate.toFixed(6) : '—'}</dd>
-            </div>
-            <div>
-              <dt>Importance sampling std. error</dt>
-              <dd>{importanceResult ? importanceResult.std_error.toFixed(6) : '—'}</dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="muted">Run both methods to compare results.</p>
-        )}
-      </section>
-
-      <section className="panel">
-        <div className="panel-header">
-          <h2>Importance sampling history</h2>
-          <button
-            type="button"
-            onClick={() => setImportanceHistory([])}
-            disabled={importanceHistory.length === 0}
-          >
-            Clear
-          </button>
+          <section className="panel">
+            <h2>Comparison</h2>
+            {result || importanceResult ? (
+              <dl>
+                <div>
+                  <dt>Standard MC estimate</dt>
+                  <dd>{result ? result.estimate.toFixed(6) : '--'}</dd>
+                </div>
+                <div>
+                  <dt>Standard MC std. error</dt>
+                  <dd>{result ? result.std_error.toFixed(6) : '--'}</dd>
+                </div>
+                <div>
+                  <dt>Importance sampling estimate</dt>
+                  <dd>{importanceResult ? importanceResult.estimate.toFixed(6) : '--'}</dd>
+                </div>
+                <div>
+                  <dt>Importance sampling std. error</dt>
+                  <dd>{importanceResult ? importanceResult.std_error.toFixed(6) : '--'}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="muted">Run both methods to compare results.</p>
+            )}
+          </section>
         </div>
-        {importanceHistory.length < 2 ? (
-          <p className="muted">Run importance sampling at least twice to plot.</p>
-        ) : (
-          <EstimatePlot values={importanceHistory} />
-        )}
-      </section>
 
-      <section className="panel">
-        <div className="panel-header">
-          <h2>Estimate history</h2>
-          <button
-            type="button"
-            onClick={() => setHistory([])}
-            disabled={history.length === 0}
-          >
-            Clear
-          </button>
-        </div>
-        {history.length < 2 ? (
-          <p className="muted">Run the simulation at least twice to plot.</p>
-        ) : (
-          <EstimatePlot values={history} />
-        )}
-      </section>
+        <div className="column">
+          <section className="panel">
+            <div className="panel-header">
+              <h2>Importance sampling history</h2>
+              <button
+                type="button"
+                onClick={() => setImportanceHistory([])}
+                disabled={importanceHistory.length === 0}
+              >
+                Clear
+              </button>
+            </div>
+            {importanceHistory.length < 2 ? (
+              <p className="muted">Run importance sampling at least twice to plot.</p>
+            ) : (
+              <EstimatePlot values={importanceHistory} />
+            )}
+          </section>
 
-      <section className="panel">
-        <div className="panel-header">
-          <h2>Convergence</h2>
-          <button
-            type="button"
-            onClick={() => setConvergence([])}
-            disabled={convergence.length === 0}
-          >
-            Clear
-          </button>
+          <section className="panel">
+            <div className="panel-header">
+              <h2>Estimate history</h2>
+              <button
+                type="button"
+                onClick={() => setHistory([])}
+                disabled={history.length === 0}
+              >
+                Clear
+              </button>
+            </div>
+            {history.length < 2 ? (
+              <p className="muted">Run the simulation at least twice to plot.</p>
+            ) : (
+              <EstimatePlot values={history} />
+            )}
+          </section>
+
+          <section className="panel">
+            <div className="panel-header">
+              <h2>Convergence</h2>
+              <button
+                type="button"
+                onClick={() => setConvergence([])}
+                disabled={convergence.length === 0}
+              >
+                Clear
+              </button>
+            </div>
+            <label>
+              Max samples
+              <input
+                type="number"
+                min={1}
+                max={1_000_000}
+                value={convergenceMax}
+                onChange={(event) => setConvergenceMax(Number(event.target.value))}
+              />
+            </label>
+            <label>
+              Step size
+              <input
+                type="number"
+                min={1}
+                max={100_000}
+                value={convergenceStep}
+                onChange={(event) => setConvergenceStep(Number(event.target.value))}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={runConvergence}
+              disabled={convergenceLoading}
+            >
+              {convergenceLoading ? 'Running...' : 'Run convergence'}
+            </button>
+            {convergenceError && <p className="error">{convergenceError}</p>}
+            {convergence.length < 2 ? (
+              <p className="muted">Run convergence to see the plot.</p>
+            ) : (
+              <ConvergencePlot points={convergence} />
+            )}
+          </section>
         </div>
-        <label>
-          Max samples
-          <input
-            type="number"
-            min={1}
-            max={1_000_000}
-            value={convergenceMax}
-            onChange={(event) => setConvergenceMax(Number(event.target.value))}
-          />
-        </label>
-        <label>
-          Step size
-          <input
-            type="number"
-            min={1}
-            max={100_000}
-            value={convergenceStep}
-            onChange={(event) => setConvergenceStep(Number(event.target.value))}
-          />
-        </label>
-        <button
-          type="button"
-          onClick={runConvergence}
-          disabled={convergenceLoading}
-        >
-          {convergenceLoading ? 'Running...' : 'Run convergence'}
-        </button>
-        {convergenceError && <p className="error">{convergenceError}</p>}
-        {convergence.length < 2 ? (
-          <p className="muted">Run convergence to see the plot.</p>
-        ) : (
-          <ConvergencePlot points={convergence} />
-        )}
-      </section>
+      </div>
     </div>
   )
 }
